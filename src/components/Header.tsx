@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Bot, Settings, User } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
+import { AuthModal } from "./AuthModal";
 
 export const Header = () => {
   return (
@@ -34,9 +35,11 @@ export const Header = () => {
           <Button variant="ghost" size="icon">
             <Settings className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon">
-            <User className="h-5 w-5" />
-          </Button>
+          <AuthModal>
+            <Button variant="ghost" size="icon">
+              <User className="h-5 w-5" />
+            </Button>
+          </AuthModal>
           
           <Sheet>
             <SheetTrigger asChild className="md:hidden">

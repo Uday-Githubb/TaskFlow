@@ -4,15 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Wand2, Play, Clock, Target } from "lucide-react";
+import { Wand2, Play, Clock, Target, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useTaskStore } from "@/hooks/useTaskStore";
+import { OpenAIService, AITaskRequest } from "@/services/openaiService";
 
 export const AITaskCreator = () => {
   const [prompt, setPrompt] = useState("");
   const [platform, setPlatform] = useState("");
   const [priority, setPriority] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [lastCreatedTask, setLastCreatedTask] = useState<string | null>(null);
   const { toast } = useToast();
+  const { addTask } = useTaskStore();
 
   const platforms = [
     { value: "email", label: "Email Automation" },
@@ -41,17 +45,55 @@ export const AITaskCreator = () => {
 
     setIsProcessing(true);
     
-    // Simulate AI processing
-    setTimeout(() => {
+    try {
+      const aiRequest: AITaskRequest = {
+        prompt: prompt.trim(),
+        platform,
+        priority
+      };
+
+      const aiResponse = await OpenAIService.generateTask(aiRequest);
+      
+      if (aiResponse.success) {
+        // Add task to store
+        addTask({
+          name: aiResponse.taskName,
+          description: aiResponse.description,
+          platform,
+          status: 'scheduled',
+          progress: 0,
+          priority: priority as 'low' | 'medium' | 'high',
+          eta: aiResponse.estimatedDuration,
+          lastRun: 'Never',
+          apiCalls: 0
+        });
+
+        setLastCreatedTask(aiResponse.taskName);
+        
+        toast({
+          title: "Task Created Successfully",
+          description: `"${aiResponse.taskName}" has been created and scheduled. Confidence: ${Math.round(aiResponse.confidence * 100)}%`,
+        });
+        
+        setPrompt("");
+        setPlatform("");
+        setPriority("");
+      } else {
+        toast({
+          title: "AI Processing Failed",
+          description: aiResponse.description,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
       toast({
-        title: "Task Created Successfully",
-        description: "Your AI automation task has been queued for execution.",
+        title: "Error",
+        description: "Failed to process your request. Please try again.",
+        variant: "destructive"
       });
-      setPrompt("");
-      setPlatform("");
-      setPriority("");
+    } finally {
       setIsProcessing(false);
-    }, 2000);
+    }
   };
 
   const getPriorityColor = (value: string) => {
@@ -136,6 +178,15 @@ export const AITaskCreator = () => {
           </div>
         )}
 
+        {lastCreatedTask && (
+          <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <CheckCircle className="h-4 w-4 text-green-600" />
+            <span className="text-sm text-green-700 dark:text-green-300">
+              Last created: <strong>{lastCreatedTask}</strong>
+            </span>
+          </div>
+        )}
+
         <Button 
           onClick={handleCreateTask}
           disabled={isProcessing || !prompt.trim() || !platform || !priority}
@@ -145,7 +196,7 @@ export const AITaskCreator = () => {
           {isProcessing ? (
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Processing with AI...
+              AI is analyzing your request...
             </div>
           ) : (
             <div className="flex items-center gap-2">

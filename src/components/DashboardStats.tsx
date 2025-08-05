@@ -1,32 +1,42 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Activity, CheckCircle, Clock, Zap } from "lucide-react";
+import { useTaskStore } from "@/hooks/useTaskStore";
+import { useEffect } from "react";
 
 export const DashboardStats = () => {
-  const stats = [
+  const { stats, updateStats } = useTaskStore();
+
+  useEffect(() => {
+    updateStats();
+    const interval = setInterval(updateStats, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, [updateStats]);
+
+  const statsData = [
     {
       title: "Active Tasks",
-      value: "12",
+      value: stats.activeTasks.toString(),
       description: "Currently running",
       icon: Activity,
       trend: "+2 from yesterday"
     },
     {
       title: "Completed Today",
-      value: "47",
+      value: stats.completedToday.toString(),
       description: "Successfully finished",
       icon: CheckCircle,
       trend: "+12% from yesterday"
     },
     {
       title: "Time Saved",
-      value: "5.2h",
+      value: `${stats.timeSavedHours}h`,
       description: "Today's automation",
       icon: Clock,
       trend: "+0.5h from yesterday"
     },
     {
       title: "API Calls",
-      value: "1,432",
+      value: stats.apiCallsMonth.toLocaleString(),
       description: "This month",
       icon: Zap,
       trend: "+8% from last month"
@@ -35,7 +45,7 @@ export const DashboardStats = () => {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat, index) => {
+      {statsData.map((stat, index) => {
         const Icon = stat.icon;
         return (
           <Card key={index} className="transition-all duration-200 hover:shadow-lg">

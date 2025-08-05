@@ -3,58 +3,74 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Mail, MessageSquare, Database, BarChart3, Calendar, FileText, Settings } from "lucide-react";
+import { useTaskStore } from "@/hooks/useTaskStore";
+import { useToast } from "@/hooks/use-toast";
 
 export const IntegrationsPanel = () => {
-  const integrations = [
+  const { integrations, toggleIntegration } = useTaskStore();
+  const { toast } = useToast();
+
+  const allIntegrations = [
     {
       name: "Email Automation",
       description: "Connect with Gmail, Outlook, and other email providers",
       icon: Mail,
-      status: "connected",
-      apiCallsToday: 142,
-      lastSync: "5 min ago"
+      key: "Email Automation"
     },
     {
       name: "Social Media",
       description: "Automate posts on Twitter, LinkedIn, Facebook",
       icon: MessageSquare,
-      status: "connected",
-      apiCallsToday: 67,
-      lastSync: "1 hour ago"
+      key: "Social Media"
     },
     {
       name: "CRM Systems",
       description: "Integrate with Salesforce, HubSpot, Pipedrive",
       icon: Database,
-      status: "disconnected",
-      apiCallsToday: 0,
-      lastSync: "Never"
+      key: "CRM Systems"
     },
     {
       name: "Analytics Tools",
       description: "Connect Google Analytics, Mixpanel, etc.",
       icon: BarChart3,
-      status: "connected",
-      apiCallsToday: 23,
-      lastSync: "2 hours ago"
+      key: "Analytics Tools"
     },
     {
       name: "Calendar Apps",
       description: "Sync with Google Calendar, Outlook Calendar",
       icon: Calendar,
-      status: "connected",
-      apiCallsToday: 8,
-      lastSync: "30 min ago"
+      key: "Calendar Apps"
     },
     {
       name: "Document Management",
       description: "Automate Google Drive, Dropbox, OneDrive",
       icon: FileText,
-      status: "disconnected",
-      apiCallsToday: 0,
-      lastSync: "Never"
+      key: "Document Management"
     }
   ];
+
+  const handleToggleIntegration = (integrationName: string) => {
+    toggleIntegration(integrationName);
+    
+    const integration = integrations.find(i => i.name === integrationName);
+    const newStatus = integration?.enabled ? 'disconnected' : 'connected';
+    
+    toast({
+      title: `Integration ${newStatus === 'connected' ? 'Connected' : 'Disconnected'}`,
+      description: `${integrationName} has been ${newStatus}.`,
+      variant: newStatus === 'connected' ? 'default' : 'destructive'
+    });
+  };
+
+  const getIntegrationData = (key: string) => {
+    return integrations.find(i => i.name === key) || {
+      name: key,
+      status: 'disconnected' as const,
+      apiCallsToday: 0,
+      lastSync: 'Never',
+      enabled: false
+    };
+  };
 
   const getStatusColor = (status: string) => {
     return status === "connected" ? "bg-green-500 text-white" : "bg-gray-500 text-white";
@@ -76,36 +92,40 @@ export const IntegrationsPanel = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {integrations.map((integration, index) => (
-          <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
-            <div className="flex items-center space-x-3 flex-1">
-              {getIcon(integration.icon, integration.status)}
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <h4 className="font-medium">{integration.name}</h4>
-                  <Badge className={getStatusColor(integration.status)}>
-                    {integration.status}
-                  </Badge>
+        {allIntegrations.map((integration, index) => {
+          const data = getIntegrationData(integration.key);
+          return (
+            <div key={index} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+              <div className="flex items-center space-x-3 flex-1">
+                {getIcon(integration.icon, data.status)}
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium">{integration.name}</h4>
+                    <Badge className={getStatusColor(data.status)}>
+                      {data.status}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{integration.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>API calls today: <strong>{data.apiCallsToday}</strong></span>
+                    <span>Last sync: {data.lastSync}</span>
+                  </div>
+                  </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{integration.description}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <span>API calls today: <strong>{integration.apiCallsToday}</strong></span>
-                  <span>Last sync: {integration.lastSync}</span>
+                
+                <div className="flex items-center space-x-3">
+                  <Switch 
+                    checked={data.enabled} 
+                    onCheckedChange={() => handleToggleIntegration(integration.key)}
+                    className="data-[state=checked]:bg-green-500"
+                  />
+                  <Button variant="ghost" size="sm">
+                    Configure
+                  </Button>
                 </div>
               </div>
-            </div>
-            
-            <div className="flex items-center space-x-3">
-              <Switch 
-                checked={integration.status === "connected"} 
-                className="data-[state=checked]:bg-green-500"
-              />
-              <Button variant="ghost" size="sm">
-                Configure
-              </Button>
-            </div>
-          </div>
-        ))}
+            );
+          })}
         
         <div className="pt-4 border-t">
           <Button className="w-full" variant="outline">
