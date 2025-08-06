@@ -12,7 +12,7 @@ AI-powered web application that automates interactions with online services thro
 - Leverages **ML-driven optimization** for workflow efficiency
 - Processes natural language requests via **OpenAI integration**
 
-**Live Demo:** [taskflow.lovable.app][(https://taskflow.lovable.app](https://taskkflow.lovable.app/))
+**Live Demo:**[(https://taskflow.lovable.app](https://taskkflow.lovable.app/))
 
 [![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
