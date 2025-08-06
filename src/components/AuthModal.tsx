@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { User, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthModalProps {
@@ -12,78 +11,32 @@ interface AuthModalProps {
 }
 
 export const AuthModal = ({ children }: AuthModalProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    password: "",
-    confirmPassword: "",
-    name: ""
-  });
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const simulateAuth = async (action: 'login' | 'signup') => {
+  const handleAuth = async (e: React.FormEvent<HTMLFormElement>, type: 'login' | 'signup') => {
+    e.preventDefault();
     setIsLoading(true);
     
-    // Simulate API call
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get('email') as string;
+    const password = formData.get('password') as string;
+    const name = formData.get('name') as string;
+
+    // Simulate authentication
     await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    // Simulate success/failure
-    if (Math.random() > 0.1) {
-      toast({
-        title: `${action === 'login' ? 'Login' : 'Sign Up'} Successful`,
-        description: `Welcome${action === 'signup' ? ' to AI TaskFlow' : ' back'}! You can now access all features.`,
-      });
+
+    if (email && password) {
       setIsOpen(false);
-      setFormData({ email: "", password: "", confirmPassword: "", name: "" });
-    } else {
+      
       toast({
-        title: "Authentication Failed",
-        description: "Please check your credentials and try again.",
-        variant: "destructive"
+        title: type === 'login' ? "Welcome back!" : "Account created!",
+        description: `Successfully ${type === 'login' ? 'logged in' : 'signed up'} as ${email}`,
       });
     }
     
     setIsLoading(false);
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-    simulateAuth('login');
-  };
-
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.email || !formData.password || !formData.name) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: "Password Mismatch",
-        description: "Passwords do not match.",
-        variant: "destructive"
-      });
-      return;
-    }
-    simulateAuth('signup');
   };
 
   return (
@@ -93,10 +46,7 @@ export const AuthModal = ({ children }: AuthModalProps) => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <User className="h-5 w-5 text-primary" />
-            Access AI TaskFlow
-          </DialogTitle>
+          <DialogTitle>Authentication</DialogTitle>
         </DialogHeader>
         
         <Tabs defaultValue="login" className="w-full">
@@ -105,140 +55,86 @@ export const AuthModal = ({ children }: AuthModalProps) => {
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="login" className="space-y-4">
-            <form onSubmit={handleLogin} className="space-y-4">
+          <TabsContent value="login">
+            <form onSubmit={(e) => handleAuth(e, 'login')} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="login-email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className="pl-10"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
-                  />
-                </div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  required
+                />
               </div>
-              
               <div className="space-y-2">
-                <Label htmlFor="login-password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="login-password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    className="pl-10 pr-10"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1 h-8 w-8"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="Your password"
+                  required
+                />
               </div>
-              
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Logging in...
+                  </div>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </form>
           </TabsContent>
           
-          <TabsContent value="signup" className="space-y-4">
-            <form onSubmit={handleSignup} className="space-y-4">
+          <TabsContent value="signup">
+            <form onSubmit={(e) => handleAuth(e, 'signup')} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="signup-name">Full Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    className="pl-10"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    required
-                  />
-                </div>
+                <Input
+                  id="signup-name"
+                  name="name"
+                  type="text"
+                  placeholder="Your full name"
+                  required
+                />
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="signup-email">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="Enter your email"
-                    className="pl-10"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
-                  />
-                </div>
+                <Input
+                  id="signup-email"
+                  name="email"
+                  type="email"
+                  placeholder="your@email.com"
+                  required
+                />
               </div>
-              
               <div className="space-y-2">
                 <Label htmlFor="signup-password">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Create a password"
-                    className="pl-10 pr-10"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    required
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="absolute right-1 top-1 h-8 w-8"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                </div>
+                <Input
+                  id="signup-password"
+                  name="password"
+                  type="password"
+                  placeholder="Create a password"
+                  required
+                />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="signup-confirm">Confirm Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="signup-confirm"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Confirm your password"
-                    className="pl-10"
-                    value={formData.confirmPassword}
-                    onChange={(e) => handleInputChange("confirmPassword", e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              
               <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating account..." : "Create Account"}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Creating account...
+                  </div>
+                ) : (
+                  "Sign Up"
+                )}
               </Button>
             </form>
           </TabsContent>
         </Tabs>
-        
-        <div className="text-center text-sm text-muted-foreground">
-          <p>Demo: Use any email and password to simulate authentication</p>
-        </div>
       </DialogContent>
     </Dialog>
   );
