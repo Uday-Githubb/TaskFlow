@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, Bot, Settings, User } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { AuthModal } from "./AuthModal";
-import { useToast } from "@/hooks/use-toast";
 
 export const Header = () => {
 
